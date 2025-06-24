@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gerar Orçamento - Serralheria</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    fieldset {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    legend {
+      font-weight: bold;
+      padding: 0 10px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="file"],
+    textarea {
+      width: 100%;
+      padding: 6px 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid #aaa;
+    }
+
+    button {
+      background-color: #2980b9;
+      color: white;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 16px;
+      margin-top: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1c5980;
+    }
+
+    .items-container {
+      margin-top: 10px;
+    }
+
+    .item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      background: #fafafa;
+    }
+
+    .item input {
+      width: calc(100% - 20px);
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .flex-row>div {
+      flex: 1 1 150px;
+    }
+
+    @media (max-width: 875px) {
+      .form-row {
+        flex-direction: column-reverse;
+      }
+
+      .form-row fieldset {
+        width: 92% !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Gerar Orçamento - Serralheria</h1>
+
+  <form id="orcamentoForm">
+    <div class="form-row" style="display: flex; gap: 20px;">
+      <fieldset style="width: 50%;">
+        <legend>Empresa</legend>
+        <label>Nome da Empresa
+          <input type="text" id="empresaNome" required value="Nome da Empresa Serralheria Ltda" />
+        </label>
+        <label>CNPJ
+          <input type="text" id="empresaCNPJ" required value="00.000.000/0000-00" />
+        </label>
+        <label>Endereço
+          <input type="text" id="empresaEndereco" required value="Rua Exemplo, 123 - Bairro - Cidade - Estado" />
+        </label>
+        <label>Telefone
+          <input type="text" id="empresaTelefone" required value="(00) 0000-0000" />
+        </label>
+        <label>E-mail
+          <input type="email" id="empresaEmail" required value="contato@serralheriaexemplo.com.br" />
+        </label>
+        <label>Logo (PNG/JPG)
+          <input type="file" id="empresaLogo" accept="image/png, image/jpeg" />
+        </label>
+      </fieldset>
+
+      <fieldset style="width: 50%; min-height: 100px;">
+        <legend>Conectar WhatsApp</legend>
+        <img id="qrCode" style="max-width: 100%; display: none; border: 1px solid #ccc;" />
+        <p id="whatsStatus" style="margin-top: 10px; font-weight: bold; color: green;"></p>
+      </fieldset>
+
+    </div>
+
+    <fieldset>
+      <legend>Cliente</legend>
+      <label>Nome do Cliente
+        <input type="text" id="clienteNome" required />
+      </label>
+      <label>Telefone
+        <input type="text" id="clienteTelefone" />
+      </label>
+      <label>E-mail
+        <input type="email" id="clienteEmail" />
+      </label>
+      <label>Endereço
+        <textarea id="clienteEndereco" rows="2"></textarea>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Itens do Orçamento</legend>
+      <div id="itensContainer" class="items-container"></div>
+      <button type="button" onclick="addItem()">Adicionar Item</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Materiais Utilizados</legend>
+      <textarea id="materiaisUtilizados" rows="3" placeholder="Separe por vírgula, ex: Alumínio, Aço inox, Pintura"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>Condições</legend>
+      <label>Prazo para execução
+        <input type="text" id="condicoesPrazo" value="10 dias úteis após confirmação do pagamento" />
+      </label>
+      <label>Forma de pagamento
+        <input type="text" id="condicoesPagamento" value="50% na aprovação do orçamento e 50% na entrega do serviço" />
+      </label>
+      <label>Validade do orçamento
+        <input type="text" id="condicoesValidade" value="15 dias a partir da data de emissão" />
+      </label>
+      <label>Transporte e instalação
+        <input type="text" id="condicoesTransporte" value="Grátis" />
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Data de Emissão</legend>
+      <input type="date" id="dataEmissao" value="" required />
+    </fieldset>
+
+    <button type="submit">Gerar PDF do Orçamento</button>
+  </form>
+
+  <hr />
+  <h2>Visualização do Orçamento</h2>
+  <iframe id="pdfViewer" style="width:100%; height:500px; border:1px solid #ccc;"></iframe>
+  <br />
+  <div style="margin-top: 10px; display: flex; gap: 10px;">
+    <button id="downloadButton" style="display:none;">Baixar PDF</button>
+    <button id="sendWhatsappButton" style="display:none; background-color: #25D366;">Enviar para WhatsApp</button>
+  </div>
+
+  <script>
+
+    async function verificarConexaoWhatsApp() {
+      try {
+        const qrImg = document.getElementById('qrCode');
+        const statusEl = document.getElementById('whatsStatus');
+
+        const response = await fetch('http://localhost:3003/whatsapp-status');
+        const data = await response.json();
+
+        if (data.connected) {
+          qrImg.style.display = 'none';
+          statusEl.innerText = "✅ WhatsApp já está conectado";
+        } else if (data.qrCode) {
+          qrImg.src = data.qrCode;
+          qrImg.style.display = 'block';
+          statusEl.innerText = "Escaneie o QR Code para conectar-se ao WhatsApp";
+        } else {
+          qrImg.style.display = 'none';
+          statusEl.innerText = "Aguardando conexão com WhatsApp...";
+        }
+      } catch (err) {
+        console.error("Erro ao verificar status do WhatsApp:", err);
+        document.getElementById('whatsStatus').innerText = "❌ Erro ao conectar com o servidor";
+      }
+    }
+
+    // Executa ao carregar a página
+    window.addEventListener("DOMContentLoaded", verificarConexaoWhatsApp);
+
+    const itensContainer = document.getElementById('itensContainer');
+    const downloadButton = document.getElementById('downloadButton');
+
+    // Adiciona um item no formulário
+    function addItem(data = {}) {
+      const index = itensContainer.children.length + 1;
+
+      const div = document.createElement('div');
+      div.className = 'item';
+
+      div.innerHTML = `
+      <div class="flex-row">
+        <div><label>Item: <input type="number" class="item-item" value="${index}" readonly /></label></div>
+        <div><label>Descrição: <input type="text" class="item-descricao" required value="${data.descricao || ''}" /></label></div>
+        <div><label>Quantidade: <input type="number" class="item-quantidade" min="1" value="${data.quantidade || 1}" /></label></div>
+        <div><label>Unidade: <input type="text" class="item-unidade" required value="${data.unidade || ''}" /></label></div>
+        <div><label>Valor Unitário (R$): <input type="number" step="0.01" min="0" class="item-valorUnitario" required value="${data.valorUnitario || 0}" /></label></div>
+        <div><label>Valor Total (R$): <input type="number" step="0.01" min="0" class="item-valorTotal" required value="${data.valorTotal || 0}" /></label></div>
+      </div>
+      <button type="button" onclick="removeItem(this)" style="margin-top:5px;background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">Remover Item</button>
+    `;
+
+      itensContainer.appendChild(div);
+    }
+
+    // Remove item e atualiza números
+    function removeItem(button) {
+      button.parentNode.remove();
+      updateItemNumbers();
+    }
+
+    // Atualiza números dos itens
+    function updateItemNumbers() {
+      Array.from(itensContainer.children).forEach((itemDiv, i) => {
+        const inputItem = itemDiv.querySelector('.item-item');
+        inputItem.value = i + 1;
+      });
+    }
+
+    // Converte arquivo em base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = err => reject(err);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Função para montar o payload JSON com os dados do formulário
+    async function montarPayload() {
+      // Pega logo e converte para base64, se existir
+      const fileInput = document.getElementById('empresaLogo');
+      let logoBase64 = null;
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        logoBase64 = await fileToBase64(file);
+        logoBase64 = logoBase64.split(',')[1]; // Remove prefixo data:image/png;base64,
+      }
+
+      let clienteTelefone = document.getElementById('clienteTelefone').value.replace(/\D/g, '');
+      if (!clienteTelefone.startsWith('55')) {
+        clienteTelefone = '55' + clienteTelefone;
+      }
+
+      // Monta o objeto JSON
+      const payload = {
+        empresa: {
+          nome: document.getElementById('empresaNome').value,
+          cnpj: document.getElementById('empresaCNPJ').value,
+          endereco: document.getElementById('empresaEndereco').value,
+          telefone: document.getElementById('empresaTelefone').value,
+          email: document.getElementById('empresaEmail').value,
+          logo: logoBase64 ? { type: 'base64', data: logoBase64 } : null,
+        },
+        cliente: {
+          nome: document.getElementById('clienteNome').value,
+          telefone: clienteTelefone,
+          email: document.getElementById('clienteEmail').value,
+          endereco: document.getElementById('clienteEndereco').value,
+        },
+        descricaoServico: Array.from(itensContainer.children).map(div => ({
+          item: Number(div.querySelector('.item-item').value),
+          descricao: div.querySelector('.item-descricao').value,
+          quantidade: Number(div.querySelector('.item-quantidade').value),
+          unidade: div.querySelector('.item-unidade').value,
+          valorUnitario: Number(div.querySelector('.item-valorUnitario').value),
+          valorTotal: Number(div.querySelector('.item-valorTotal').value),
+        })),
+        materiaisUtilizados: document.getElementById('materiaisUtilizados').value
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean),
+        valorTotal: Array.from(itensContainer.children).reduce((acc, div) => {
+          return acc + Number(div.querySelector('.item-valorTotal').value);
+        }, 0),
+        condicoes: {
+          prazoExecucao: document.getElementById('condicoesPrazo').value,
+          formaPagamento: document.getElementById('condicoesPagamento').value,
+          validadeOrcamento: document.getElementById('condicoesValidade').value,
+          transporteInstalacao: document.getElementById('condicoesTransporte').value,
+        },
+        dataEmissao: document.getElementById('dataEmissao').value,
+      };
+
+      return payload;
+    }
+
+    // Manipulador do envio do formulário para gerar PDF e mostrar botão download e enviar WhatsApp
+    document.getElementById('orcamentoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      try {
+        const payload = await montarPayload();
+
+        // Requisição para gerar PDF
+        const response = await fetch('http://localhost:3003/generate-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) throw new Error('Erro ao gerar PDF');
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        // Mostrar PDF no iframe
+        const iframe = document.getElementById('pdfViewer');
+        iframe.src = url;
+
+        // Mostrar e configurar botão de download
+        downloadButton.style.display = 'inline-block';
+        downloadButton.onclick = () => {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'orcamento.pdf';
+          a.click();
+          URL.revokeObjectURL(url);
+        };
+
+        // Mostrar botão enviar para WhatsApp (se existir)
+        sendWhatsappButton.style.display = "inline-block";
+
+        // Salvar payload para o envio WhatsApp
+        sendWhatsappButton.payload = payload;
+
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Botão enviar para WhatsApp (botão criado no HTML)
+    const sendWhatsappButton = document.getElementById("sendWhatsappButton");
+    sendWhatsappButton.style.display = "none";
+
+    sendWhatsappButton.addEventListener("click", async () => {
+      const numeroWhats = document.getElementById('clienteTelefone').value.trim();
+      const emailCliente = document.getElementById('clienteEmail').value.trim();
+
+      if (!numeroWhats) {
+        return alert("Por favor, preencha o telefone do cliente para enviar pelo WhatsApp.");
+      }
+      if (!emailCliente) {
+        return alert("Por favor, preencha o e-mail do cliente para enviar por e-mail.");
+      }
+
+      // Pega o payload salvo na submissão do formulário
+      const payload = sendWhatsappButton.payload;
+
+      // Envia para seu backend a requisição para enviar o PDF por WhatsApp
+      try {
+        const response = await fetch('http://localhost:3003/send-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            number: '55' + numeroWhats,
+            email: emailCliente
+          }),
+        });
+
+        if (!response.ok) throw new Error("Erro ao enviar PDF pelo WhatsApp");
+
+        alert("PDF enviado com sucesso para o WhatsApp!");
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Adiciona um item padrão na inicialização
+    addItem({
+      descricao: 'Portão de alumínio 2m x 1,5m',
+      quantidade: 1,
+      unidade: 'unidade',
+      valorUnitario: 800,
+      valorTotal: 800
+    });
+  </script>
+
+</body>
+
+</html>
